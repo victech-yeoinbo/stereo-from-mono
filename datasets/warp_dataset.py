@@ -279,7 +279,6 @@ class WarpDataset(BaseDataset):
     def augment_synthetic_image(self, image):
 
         if self.disable_synthetic_augmentation:
-
             return Image.fromarray(image.astype(np.uint8))
 
         # add some noise to stereo image

@@ -83,6 +83,7 @@ class MapillaryDataset(WarpDataset):
         h, w = disparity.shape
         new_w = 1200
         new_h = int(h * new_w / w)
+        
         # cast disp to float32 for cv2 resizing
         disparity = cv2.resize(disparity.astype(float), (new_w, new_h), interpolation=cv2.INTER_NEAREST)
 
