@@ -1,14 +1,14 @@
 # training datasets
-ADE20K: /datasets/ADE20K
-diode: /datasets/diode
-diw: /datasets/diw/
-mapillary: datasets/mapillary/
-mscoco: /datasets/mscoco/mscoco_stuff
-sceneflow: /datasets/sceneflow/
+ADE20K: /workspace/stereo-from-mono/workdata/ADE20K
+diode: /workspace/stereo-from-mono/workdata/diode
+diw: /workspace/stereo-from-mono/workdata/diw/
+mapillary: /workspace/stereo-from-mono/workdata/mapillary/
+mscoco: /workspace/stereo-from-mono/workdata/mscoco/
+sceneflow: /workspace/stereo-from-mono/workdata/sceneflow/ # not yet
 
 # testing datasets
-eth3d: /datasets/ETH3D/
-flicker: /datasets/flicker1024
-kitti2015: /kitti/stereo/
-kitti2012: /datasets/kitti/stereo2012/
-middlebury: /datasets/middlebury/
+eth3d: /workspace/stereo-from-mono/workdata/ETH3D/ # not yet
+flicker: /workspace/stereo-from-mono/workdata/flicker1024 # not yet
+kitti2015: /workspace/stereo-from-mono/workdata/kitti/stereo/ # not yet
+kitti2012: /workspace/stereo-from-mono/workdata/kitti/stereo2012/ # not yet
+middlebury: /workspace/stereo-from-mono/workdata/middlebury/ # not yet

@@ -27,7 +27,7 @@ import torch.nn.functional as F
 from datasets import SceneFlowDataset, MSCOCODataset, ADE20KDataset, \
     KITTIStereoDataset, DIWDataset, DiodeDataset, MapillaryDataset
 from model_manager import ModelManager
-from utils import readlines, normalise_image, MyRandomSampler, load_config
+from utils import readlines, normalise_image, check_chw, MyRandomSampler, load_config
 
 
 dataset_lookup = {'mscoco': MSCOCODataset,
@@ -50,6 +50,7 @@ class TrainManager:
         print('---------------')
         print('setting up...')
         self.opt = options
+
         # Create network and optimiser
         self.model_manager = ModelManager(self.opt)
         if self.opt.load_path is not None:
@@ -83,8 +84,8 @@ class TrainManager:
                                        int(sampling * len(train_filenames)),
                                        replace=False))
 
-            train_dataset = dataset_class(dataset_path,
-                                          train_filenames, self.opt.height,
+            train_dataset = dataset_class(dataset_path, train_filenames, 
+                                          self.opt.height,
                                           self.opt.width, is_train=True,
                                           disable_normalisation=self.opt.disable_normalisation,
                                           max_disparity=self.opt.max_disparity,
@@ -179,7 +180,7 @@ class TrainManager:
                 self.val()
                 self.model.train()
 
-            if self.step % 10000 == 0:
+            if self.step % 1000 == 0:
                 self.model_manager.save_model(folder_name='weights_{}'.format(self.step))
 
             self.step += 1
@@ -287,7 +288,7 @@ class TrainManager:
             writer.add_image('image_r/{}'.format(i), normalise_image(inputs['stereo_image'][i]), self.step)
 
             if inputs.get('disparity') is not None:
-                writer.add_image('disp_target/{}'.format(i), normalise_image(inputs['disparity'][i]),
+                writer.add_image('disp_target/{}'.format(i), check_chw(normalise_image(inputs['disparity'][i])),
                                  self.step)
 
                 warped_image = self.warp_stereo_image(inputs['stereo_image'][i].cpu(),
@@ -297,15 +298,16 @@ class TrainManager:
 
             if inputs.get('mono_disparity') is not None:
                 writer.add_image('mono_disparity/{}'.format(i),
-                                 normalise_image(inputs['mono_disparity'][i]),
+                                 check_chw(normalise_image(inputs['mono_disparity'][i])),
                                  self.step)
 
             if inputs.get('occlusion_mask') is not None:
                 writer.add_image('occlusion_mask/{}'.format(i),
-                                 normalise_image(inputs['occlusion_mask'][i]),
+                                 check_chw(normalise_image(inputs['occlusion_mask'][i])),
                                  self.step)
 
-            writer.add_image('disp_pred/{}'.format(i), normalise_image(outputs[('disp', 0)][i]),
+            writer.add_image('disp_pred/{}'.format(i),
+                             check_chw(normalise_image(outputs[('disp', 0)][i])),
                              self.step)
 
             warped_image = self.warp_stereo_image(inputs['stereo_image'][i].cpu(), outputs[('disp', 0)][i].cpu())

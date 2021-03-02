@@ -56,13 +56,13 @@ class MapillaryDataset(WarpDataset):
         """ Load an image to use as left and a random background image to fill in occlusion holes"""
 
         folder, frame = self.filenames[idx].split()
-        image = self.loader(os.path.join(self.data_path, folder, 'images', frame + '.jpg'))
+        image = self.loader(os.path.join(self.data_path, folder, frame + '.jpg'))
 
         if do_flip:
             image = image.transpose(Image.FLIP_LEFT_RIGHT)
 
         folder, frame = random.choice(self.filenames).split()
-        background = self.loader(os.path.join(self.data_path, folder, 'images', frame + '.jpg'))
+        background = self.loader(os.path.join(self.data_path, folder, frame + '.jpg'))
 
         # mapillary images are huge -> resize so width is 1200
         w, h = image.size

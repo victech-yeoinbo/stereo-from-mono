@@ -23,6 +23,14 @@ def normalise_image(img):
     return (img - img_min) / denom
 
 
+def check_chw(t):
+    if len(t.shape) == 3: # CHW
+        return t
+    elif len(t.shape) == 2: # HW
+        return t.unsqueeze(0)
+    else:
+        raise ValueError('The input tensor shape should be HW or CHW.')
+
 def transfer_color(target, source):
     target = target.astype(float) / 255
     source = source.astype(float) / 255

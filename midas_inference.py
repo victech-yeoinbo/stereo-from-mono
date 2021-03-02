@@ -35,7 +35,6 @@ def load_model(use_large_model=True):
 
     return model, transform
 
-
 class MiDaSDataset(Dataset):
     def __init__(self, data_path, transform):
         super(MiDaSDataset, self).__init__()
@@ -75,7 +74,7 @@ def depth_predict_batch(data_path, output_path):
 
     dataset = MiDaSDataset(data_path, transform)
     data_loader = DataLoader(dataset,
-                            num_workers=1,
+                            num_workers=2,
                             batch_size=1)
 
     for i, inputs in tqdm(enumerate(data_loader)):
@@ -109,29 +108,76 @@ def depth_predict_batch(data_path, output_path):
             # import gzip
             # with gzip.GzipFile(str(depth_path) + '.gz', 'w') as f:
             #     np.save(file=f, arr=depths[bi])
-            np.save(str(depth_path), depths[bi]) 
+            np.save(str(depth_path), depths[bi])
+
+def pil_loader(path):
+    # open path as file to avoid ResourceWarning
+    # (https://github.com/python-pillow/Pillow/issues/835)
+    with open(path, 'rb') as f:
+        with Image.open(f) as img:
+            return img.convert('RGB')
+
+def resize_mapillary(sub, si=None, ei=None):
+    data_path = Path('/workspace/stereo-from-mono/workdata/mapillary/' + sub)
+
+    file_paths = [f for f in data_path.glob('**/*') if f.suffix in ['.png', '.jpg', '.thumb']]
+    file_paths.sort()
+
+    if si is not None:
+        file_paths = file_paths[si:ei]
+
+    for i, path in tqdm(enumerate(file_paths)):
+        image = pil_loader(path)
+
+        # mapillary images are huge -> resize so width is 1200
+        w, h = image.size
+        if w > 1200:
+            new_w = 1200
+            new_h = int(h * new_w / w)
+
+            image = image.resize((new_w, new_h), Image.BICUBIC)
+            image.save(path)
+
 
 if __name__ == '__main__':
+    # data_path = Path('/workspace/stereo-from-mono/workdata/diw/images')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/diw/midas_depths_diw')
+    # depth_predict_batch(data_path, output_path)
+
+    # data_path = Path('/workspace/stereo-from-mono/workdata/mscoco/images')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/mscoco/midas_depths_coco')
+    # depth_predict_batch(data_path, output_path)
+
     # data_path = Path('/workspace/stereo-from-mono/workdata/ADE20K')
     # output_path = Path('/workspace/stereo-from-mono/workdata/ADE20K/midas_depths_ade20k')
     # depth_predict_batch(data_path, output_path)
 
-    data_path = Path('/workspace/stereo-from-mono/workdata/diw/images')
-    output_path = Path('/workspace/stereo-from-mono/workdata/diw/midas_depths_diw')
-    depth_predict_batch(data_path, output_path)
+    # data_path = Path('/workspace/stereo-from-mono/workdata/diode')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/diode/midas_depths_diode')
+    # depth_predict_batch(data_path, output_path)
 
-    data_path = Path('/workspace/stereo-from-mono/workdata/mscoco/images')
-    output_path = Path('/workspace/stereo-from-mono/workdata/mscoco/midas_depths_coco')
-    depth_predict_batch(data_path, output_path)
+    # data_path = Path('/workspace/stereo-from-mono/workdata/mapillary/testing')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/mapillary/midas_depths_mapillary/testing')
+    # depth_predict_batch(data_path, output_path)
+
+    # data_path = Path('/workspace/stereo-from-mono/workdata/mapillary/validation')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/mapillary/midas_depths_mapillary/validation')
+    # depth_predict_batch(data_path, output_path)
+
+    # data_path = Path('/workspace/stereo-from-mono/workdata/mapillary/training')
+    # output_path = Path('/workspace/stereo-from-mono/workdata/mapillary/midas_depths_mapillary/training')
+    # depth_predict_batch(data_path, output_path)
+
+    #resize_mapillary('testing')
+    #resize_mapillary('validation')
+    #resize_mapillary('training', 0, 4500)
+    #resize_mapillary('training', 4500, 9000)
+    #resize_mapillary('training', 9000, 13500)
+    #resize_mapillary('training', 13500, 20000)
 
 
-
-
-
-
-
-
-
-    
-        
-    
+'''
+docker run -it --rm -v /workspace:/workspace -v /media:/media --gpus all --ipc=host f48fdcc5a8db
+pip3 install tensorboardX webp
+python3 main.py --mode train --log_path ./log --model_name 0226 --batch_size 8 --num_workers 16 --training_steps 62500 --log_freq 100
+'''
