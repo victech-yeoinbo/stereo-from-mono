@@ -177,7 +177,12 @@ if __name__ == '__main__':
 
 
 '''
+<train 0226>
 docker run -it --rm -v /workspace:/workspace -v /media:/media --gpus all --ipc=host f48fdcc5a8db
 pip3 install tensorboardX webp
 python3 main.py --mode train --log_path ./log --model_name 0226 --batch_size 8 --num_workers 16 --training_steps 62500 --log_freq 100
+
+<dexter inference>
+CUDA_VISIBLE_DEVICES=0 python3 main.py --mode inference --load_path ./log/0226/models/weights_62500 --save_disparities --test_data_types dexter
+CUDA_VISIBLE_DEVICES=0 python3 main.py --mode inference --load_path ./hourglass_midas_release --save_disparities --test_data_types dexter
 '''

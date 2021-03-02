@@ -25,11 +25,12 @@ import torch.nn.functional as F
 
 from skimage import io
 from datasets import SceneFlowDataset, KITTIStereoDataset, ETH3DStereoDataset, \
-    MiddleburyStereoDataset, FlickerDataset
+    MiddleburyStereoDataset, FlickerDataset, DexterDataset
 from model_manager import ModelManager
-from utils import readlines, load_config
+from utils import readlines, load_config, normalise_image
 
 from tqdm import tqdm
+import matplotlib
 
 
 data_type_lookup = {
@@ -39,18 +40,22 @@ data_type_lookup = {
                     'kitti2015': KITTIStereoDataset,
                     'kitti2012': KITTIStereoDataset,
                     'kitti2015submission': KITTIStereoDataset,
-                    'sceneflow': SceneFlowDataset}
+                    'sceneflow': SceneFlowDataset,
+                    'dexter': DexterDataset,
+                }
 
 
 sizes_lookup = {
                 'hourglass':{
-                    'kitti2015': (1280, 384),
-                    'kitti2012': (1280, 384),
-                    'eth3d': (768, 448),
-                    'middlebury': (1280, 768),
-                    'flicker': (736, 1120),
-                    'kitti2015submission': (1280, 384),
-                    'sceneflow': (960, 512)},
+                        'kitti2015': (1280, 384),
+                        'kitti2012': (1280, 384),
+                        'eth3d': (768, 448),
+                        'middlebury': (1280, 768),
+                        'flicker': (736, 1120),
+                        'kitti2015submission': (1280, 384),
+                        'sceneflow': (960, 512),
+                        'dexter': (640, 480),
+                    },
                 }
 
 
@@ -113,8 +118,9 @@ class InferenceManager:
 
             self.error_metrics = defaultdict(list)
             self.resized_disps = []
+            self.input_images = []
             with torch.no_grad():
-                for inputs in tqdm(loader, ncols=60, position=0, leave=True):
+                for _, inputs in tqdm(enumerate(loader), ncols=60, position=0, leave=True):
                     _ = self.process_batch(inputs,
                                            compute_errors=data_type not in ['flicker',
                                                                             'kitti2015submission'])
@@ -129,6 +135,16 @@ class InferenceManager:
                     os.makedirs(_savepath, exist_ok=True)
                     for idx, disp in enumerate(self.resized_disps):
                         np.save(os.path.join(_savepath, '{}.npy'.format(str(idx).zfill(3))), disp)
+
+                    _savepath = os.path.join(self.opt.load_path, data_type, 'plts')
+                    os.makedirs(_savepath, exist_ok=True)
+                    for idx, disp in enumerate(self.resized_disps):
+                        matplotlib.image.imsave(os.path.join(_savepath, '{}.png'.format(str(idx).zfill(3))), disp)
+
+                    _savepath = os.path.join(self.opt.load_path, data_type, 'imgs')
+                    os.makedirs(_savepath, exist_ok=True)
+                    for idx, image in enumerate(self.input_images):
+                        cv2.imwrite(os.path.join(_savepath, '{}.png'.format(str(idx).zfill(3))), image)
 
                     if data_type == 'kitti2015submission':
                         _savepath = os.path.join(_savepath, 'disp_0')
@@ -165,8 +181,11 @@ class InferenceManager:
         for i in range(len(gts)):
             # resize and rescale prediction to match gt
             height, width = gts[i].shape
-            pred_disp = cv2.resize(preds[i], dsize=(width, height)) * width / preds[i].shape[
-                1]
+            pred_disp = cv2.resize(preds[i], dsize=(width, height)) * width / preds[i].shape[1]
+
+            input_image = normalise_image(inputs['image'][i]) * 255
+            input_image = torch.transpose(torch.transpose(input_image, 0, 1), 1, 2).cpu().numpy()
+            input_image = cv2.cvtColor(cv2.resize(input_image, dsize=(width, height)), cv2.COLOR_RGB2BGR)
 
             if compute_errors:
                 d1, d2, d3, EPE = self.compute_errors(gts[i], pred_disp)
@@ -177,6 +196,7 @@ class InferenceManager:
 
             if self.opt.save_disparities:
                 self.resized_disps.append(pred_disp)
+                self.input_images.append(input_image)
 
         return outputs
 

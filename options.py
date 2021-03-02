@@ -134,7 +134,7 @@ class Options:
                                  action='store_true')
         self.parser.add_argument('--test_data_types',
                                  choices=['eth3d', 'middlebury', 'kitti2015', 'kitti2012',
-                                          'flicker', 'kitti2015submission', 'sceneflow'],
+                                          'flicker', 'kitti2015submission', 'sceneflow', 'dexter'],
                                  nargs='+',
                                  default=['eth3d', 'middlebury', 'kitti2015', 'kitti2012'])
 

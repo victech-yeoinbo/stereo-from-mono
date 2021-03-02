@@ -8,4 +8,5 @@ from .middlebury_dataset import MiddleburyStereoDataset
 from .diw_dataset import DIWDataset
 from .diode_dataset import DiodeDataset
 from .flicker_dataset import FlickerDataset
-from.mapillary_dataset import MapillaryDataset
+from .mapillary_dataset import MapillaryDataset
+from .dexter_dataset import DexterDataset

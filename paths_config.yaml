@@ -7,8 +7,9 @@ mscoco: /workspace/stereo-from-mono/workdata/mscoco/
 sceneflow: /workspace/stereo-from-mono/workdata/sceneflow/ # not yet
 
 # testing datasets
-eth3d: /workspace/stereo-from-mono/workdata/ETH3D/ # not yet
-flicker: /workspace/stereo-from-mono/workdata/flicker1024 # not yet
+eth3d: /workspace/stereo-from-mono/workdata/ETH3D/
+flicker: /workspace/stereo-from-mono/workdata/flicker1024
 kitti2015: /workspace/stereo-from-mono/workdata/kitti/stereo/ # not yet
 kitti2012: /workspace/stereo-from-mono/workdata/kitti/stereo2012/ # not yet
 middlebury: /workspace/stereo-from-mono/workdata/middlebury/ # not yet
+dexter: /workspace/stereo-from-mono/workdata/dexter
