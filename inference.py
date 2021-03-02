@@ -34,29 +34,29 @@ import matplotlib
 
 
 data_type_lookup = {
-                    'eth3d': ETH3DStereoDataset,
-                    'middlebury': MiddleburyStereoDataset,
-                    'flicker': FlickerDataset,
-                    'kitti2015': KITTIStereoDataset,
-                    'kitti2012': KITTIStereoDataset,
-                    'kitti2015submission': KITTIStereoDataset,
-                    'sceneflow': SceneFlowDataset,
-                    'dexter': DexterDataset,
-                }
+    'eth3d': ETH3DStereoDataset,
+    'middlebury': MiddleburyStereoDataset,
+    'flicker': FlickerDataset,
+    'kitti2015': KITTIStereoDataset,
+    'kitti2012': KITTIStereoDataset,
+    'kitti2015submission': KITTIStereoDataset,
+    'sceneflow': SceneFlowDataset,
+    'dexter': DexterDataset,
+}
 
 
 sizes_lookup = {
-                'hourglass':{
-                        'kitti2015': (1280, 384),
-                        'kitti2012': (1280, 384),
-                        'eth3d': (768, 448),
-                        'middlebury': (1280, 768),
-                        'flicker': (736, 1120),
-                        'kitti2015submission': (1280, 384),
-                        'sceneflow': (960, 512),
-                        'dexter': (640, 480),
-                    },
-                }
+    'hourglass': {
+        'kitti2015': (1280, 384),
+        'kitti2012': (1280, 384),
+        'eth3d': (768, 448),
+        'middlebury': (1280, 768),
+        'flicker': (736, 1120),
+        'kitti2015submission': (1280, 384),
+        'sceneflow': (960, 512),
+        'dexter': (640, 480),
+    },
+}
 
 
 class InferenceManager:

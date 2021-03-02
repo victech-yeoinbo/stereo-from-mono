@@ -36,7 +36,7 @@ class Options:
         # Network Options
 
         self.parser.add_argument('--network',
-                                 choices=['hourglass'],
+                                 choices=['hourglass', 'pwcnet'],
                                  default='hourglass')
 
         self.parser.add_argument('--max_disparity',

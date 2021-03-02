@@ -31,12 +31,17 @@ class ModelManager:
         self.use_cuda = torch.cuda.is_available()
 
         # build network
-        if self.network != 'hourglass':
-            raise NotImplementedError('Currently only hourglass network implemented!')
-        self.model = networks.hourglass(self.max_disparity,
-                                        psm_no_SPP=opt.psm_no_SPP,
-                                        big_SPP=opt.big_SPP)
+        if self.network == 'hourglass':
+            self.model = networks.hourglass(self.max_disparity,
+                                psm_no_SPP=opt.psm_no_SPP,
+                                big_SPP=opt.big_SPP)
+        elif self.network == 'pwcnet':
+            self.model = networks.pwcnet()
+        else:
+            raise NotImplementedError('Not supported network implemented!')
+
         self.scales = self.model.scales
+        self.loss_weigths = self.model.loss_weigths
 
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")

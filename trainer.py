@@ -61,6 +61,7 @@ class TrainManager:
         self.optimiser = self.model_manager.optimiser
         self.scheduler = self.model_manager.scheduler
         self.scales = self.model_manager.scales
+        self.loss_weigths = self.model_manager.loss_weigths
         print('models done!')
 
         path_info = load_config(self.opt.config_path)
@@ -206,6 +207,18 @@ class TrainManager:
 
         self.log(self.val_writer, inputs, outputs, losses)
 
+    def adjust_scale(self, pred):
+        H, W = self.opt.height, self.opt.width
+        has_channel_dim = len(pred.shape) == 4
+        if pred.size(-1) != W:
+            if not has_channel_dim:
+                pred = pred.unsqueeze(1)  # [B, 1, H, W]
+            scale = W / pred.size(-1)
+            pred = F.interpolate(pred, size=(H, W), mode='bilinear', align_corners=False)
+            pred *= scale
+            pred = pred.squeeze(1)  # [B, H, W]
+        return pred
+
     def process_batch(self, inputs, compute_loss=False):
 
         # move to GPU
@@ -216,12 +229,8 @@ class TrainManager:
         outputs = self.model(inputs['image'], inputs['stereo_image'])
 
         for scale in range(self.scales):
-            # upsample to full resolution
-            pred = F.interpolate(outputs[('raw', scale)], mode='bilinear',
-                                 size=(self.opt.height, self.opt.width),
-                                 align_corners=True)
-
-            pred_disp = pred[:, 0]
+            pred = outputs[('raw', scale)]
+            pred_disp = self.adjust_scale(pred)
             outputs[('disp', scale)] = pred_disp
 
         # get losses
@@ -233,26 +242,23 @@ class TrainManager:
         return outputs, losses
 
     def compute_losses(self, inputs, outputs):
-
         losses = {}
         total_loss = 0
 
-        for scale in range(self.scales):
+        gt_disp = inputs['disparity']
+        mask = {}
+        mask = (0 < gt_disp) & (gt_disp < self.opt.max_disparity)
 
+        for scale in range(self.scales):
             pred_disp = outputs[('disp', scale)]
 
-            # compute loss on disparity
-            target_disp = torch.clamp(inputs['disparity'], max=self.opt.max_disparity)
+            loss = F.smooth_l1_loss(pred_disp[mask], gt_disp[mask])
+            losses['disp_loss/{}'.format(scale)] = loss
 
-            disparity_loss = (torch.abs(pred_disp - target_disp) * (target_disp > 0).float()).mean()
-
-            total_loss += disparity_loss
-            losses['disp_loss/{}'.format(scale)] = disparity_loss
-
-        total_loss /= self.scales
+            weight = self.loss_weigths[scale]
+            total_loss += loss
 
         losses['loss'] = total_loss
-
         return losses
 
     def warp_stereo_image(self, stereo_image, disparity):

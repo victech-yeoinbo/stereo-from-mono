@@ -67,9 +67,12 @@ class hourglass(nn.Module):
 
 
 class PSMNet(nn.Module):
-    scales = 3
     def __init__(self, maxdisp, big_SPP=False, **kwargs):
         super(PSMNet, self).__init__()
+
+        self.scales = 3
+        self.loss_weigths = [1.0, 1.0, 1.0]
+
         self.maxdisp = maxdisp
 
         self.feature_extraction = feature_extraction(big_SPP=big_SPP)
