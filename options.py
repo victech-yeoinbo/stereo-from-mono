@@ -101,7 +101,7 @@ class Options:
 
         self.parser.add_argument('--lr_step_size',
                                  type=int,
-                                 default=5)
+                                 default=15000)
 
         self.parser.add_argument('--num_workers',
                                  help=' number of workers for dataloaders',

@@ -96,9 +96,9 @@ class ContextNet(nn.Module):
 class PWCDispNet(nn.Module):
     def __init__(self):
         super(PWCDispNet, self).__init__()
-        
+
         self.scales = 5
-        self.loss_weigths = [0.25, 0.25, 0.25, 0.5, 1.0] # 1/64, 1/32, 1/16, 1/8, 1/4
+        self.loss_weigths = [1.0, 0.5, 0.25, 0.25, 0.25] # 1/4, 1/8, 1/16, 1/32, 1/64
 
         MAX_DISP = 4
         self.feat = FeaturePyramid()
@@ -176,8 +176,6 @@ class PWCDispNet(nn.Module):
         disp_pyr = [flow2, flow3, flow4, flow5, flow6]
         # convert to actual disparity (within scaled image size)
         disp_pyr = [d.squeeze(1) * 20 / 2**(s+2) for s, d in enumerate(disp_pyr)]
-        # from smaller to bigger [1/64, 1/32, 1/16, 1/8, 1/4]
-        disp_pyr = disp_pyr[::-1]
 
         outputs = {}
         outputs[('raw', 0)] = disp_pyr[0].unsqueeze(1)

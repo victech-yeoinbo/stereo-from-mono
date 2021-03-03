@@ -185,6 +185,7 @@ class TrainManager:
                 self.model_manager.save_model(folder_name='weights_{}'.format(self.step))
 
             self.step += 1
+            self.scheduler.step()
 
             if self.step >= self.opt.training_steps:
                 self.training_complete = True
@@ -192,7 +193,6 @@ class TrainManager:
 
         print('Epoch {} complete!'.format(self.epoch))
         self.model_manager.save_model(folder_name='weights_{}'.format(self.step))
-        self.scheduler.step()
 
     def val(self):
 
@@ -208,15 +208,15 @@ class TrainManager:
         self.log(self.val_writer, inputs, outputs, losses)
 
     def adjust_scale(self, pred):
+
         H, W = self.opt.height, self.opt.width
-        has_channel_dim = len(pred.shape) == 4
+        if len(pred.shape) == 3:
+            pred = pred.unsqueeze(1)  # [B, 1, H, W]
         if pred.size(-1) != W:
-            if not has_channel_dim:
-                pred = pred.unsqueeze(1)  # [B, 1, H, W]
             scale = W / pred.size(-1)
             pred = F.interpolate(pred, size=(H, W), mode='bilinear', align_corners=False)
             pred *= scale
-            pred = pred.squeeze(1)  # [B, H, W]
+        pred = pred.squeeze(1)  # [B, H, W]
         return pred
 
     def process_batch(self, inputs, compute_loss=False):
@@ -242,11 +242,11 @@ class TrainManager:
         return outputs, losses
 
     def compute_losses(self, inputs, outputs):
+        
         losses = {}
         total_loss = 0
 
         gt_disp = inputs['disparity']
-        mask = {}
         mask = (0 < gt_disp) & (gt_disp < self.opt.max_disparity)
 
         for scale in range(self.scales):
@@ -256,7 +256,7 @@ class TrainManager:
             losses['disp_loss/{}'.format(scale)] = loss
 
             weight = self.loss_weigths[scale]
-            total_loss += loss
+            total_loss += loss * weight
 
         losses['loss'] = total_loss
         return losses
