@@ -21,7 +21,6 @@ from torchvision import transforms
 import torch.nn.functional as F
 
 from skimage.filters import gaussian, sobel
-from skimage.color import rgb2grey
 
 from scipy.interpolate import griddata
 import cv2
@@ -310,6 +309,8 @@ class WarpDataset(BaseDataset):
         if self.is_train and random.random() > 0.5:
             do_flip = True
 
+        #t0 = time.time()
+
         # load from disk
         left_image, background_image = self.load_images(idx, do_flip=do_flip)
         loaded_disparity = self.load_disparity(idx, do_flip=do_flip)
@@ -318,25 +319,43 @@ class WarpDataset(BaseDataset):
         inputs['background'] = background_image
         inputs['loaded_disparity'] = loaded_disparity
 
+        #t1 = time.time()
+
         # resize and/or crop
         inputs = self.prepare_sizes(inputs)
+
+        #t2 = time.time()
 
         # match color in background image
         inputs['background'] = transfer_color(np.array(inputs['background']),
                                               np.array(inputs['left_image']))
+
+        #t3 = time.time()
+
+        # 여기 0.5
 
         # convert scaleless disparity to pixel disparity
         inputs['disparity'] = \
             self.process_disparity(inputs['loaded_disparity'],
                                    max_disparity_range=(50, self.max_disparity))
 
+        #t4 = time.time()
+
+        # 여기 2.0
+
         # now generate synthetic stereo image
         projection_disparity = inputs['disparity']
         right_image = self.project_image(inputs['left_image'],
                                          projection_disparity, inputs['background'])
 
+        #t5 = time.time()
+
         # augmentation
         right_image = self.augment_synthetic_image(right_image)
+
+        #t6 = time.time()
+
+        #print(t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
         # only keep required keys and prepare for network
         inputs = {'image': inputs['left_image'],
@@ -353,3 +372,20 @@ class WarpDataset(BaseDataset):
 
         self.preprocess(inputs)
         return inputs
+
+'''
+0.06050 0.030253 0.10212 0.56460 1.52728 0.16492
+0.04155 0.023356 0.12951 0.54494 2.02690 0.10818
+0.09888 0.034347 0.09276 0.52555 1.51005 0.12052
+0.01583 0.022626 0.08853 0.53160 1.83835 0.11265
+0.03106 0.032529 0.09351 0.53129 1.62422 0.10183
+0.04374 0.028131 0.08039 0.50496 1.47483 0.13174
+0.02873 0.033403 0.06114 0.50407 1.59445 0.11041
+0.04126 0.022199 0.08544 0.49764 1.42482 0.13390
+0.03959 0.011637 0.05940 0.49275 2.16617 0.11927
+0.05458 0.023083 0.08699 0.51986 1.66011 0.07076
+0.01573 0.020077 0.05981 0.48742 2.07600 0.13472
+0.01405 0.022872 0.06691 0.39964 1.90838 0.13526
+0.04505 0.042088 0.08571 0.49917 1.30293 0.14665
+0.01925 0.022809 0.07860 0.50533 1.61400 0.11246
+'''

@@ -190,5 +190,6 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py --mode inference --load_path ./hourglass_
 ##CUDA_VISIBLE_DEVICES=0 python3 main.py --mode train --network pwcnet --height 384 --width 512 --log_path ./log --model_name 0302pwc --batch_size 2 --num_workers 18 --training_steps 500000 --lr_step_size 100000 --log_freq 1000
 
 python3 main.py --mode train --log_path ./log --model_name 0303hg --batch_size 8 --num_workers 16 --training_steps 62500 --log_freq 100 --lr_step_size 10000
+CUDA_VISIBLE_DEVICES=0 python3 main.py --mode train --network pwcnet --height 384 --width 512 --log_path ./log --model_name 0303pwc --batch_size 2 --num_workers 18 --training_steps 500000 --lr_step_size 100000 --log_freq 1000
 
 '''
