@@ -10,3 +10,5 @@ from .diode_dataset import DiodeDataset
 from .flicker_dataset import FlickerDataset
 from .mapillary_dataset import MapillaryDataset
 from .dexter_dataset import DexterDataset
+
+from .dataset_gpu_util import *

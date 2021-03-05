@@ -225,23 +225,23 @@ class WarpDataset(BaseDataset):
 
     def project_image(self, image, disp_map, background_image):
 
-        image = np.array(image)
-        background_image = np.array(background_image)
+        image = np.array(image) # (H, W, 3)
+        background_image = np.array(background_image) # (H, W, 3)
 
         # set up for projection
         warped_image = np.zeros_like(image).astype(float)
-        warped_image = np.stack([warped_image] * 2, 0)
-        pix_locations = self.xs - disp_map
+        warped_image = np.stack([warped_image] * 2, 0) # (2, H, W, 3)
+        pix_locations = self.xs - disp_map # (H, W) - (H, W)
 
         # find where occlusions are, and remove from disparity map
-        mask = self.get_occlusion_mask(pix_locations)
-        masked_pix_locations = pix_locations * mask - self.process_width * (1 - mask)
+        mask = self.get_occlusion_mask(pix_locations) # (H, W)
+        masked_pix_locations = pix_locations * mask - self.process_width * (1 - mask) # (H, W)
 
         # do projection - linear interpolate up to 1 pixel away
         weights = np.ones((2, self.feed_height, self.process_width)) * 10000
 
         for col in range(self.process_width - 1, -1, -1):
-            loc = masked_pix_locations[:, col]
+            loc = masked_pix_locations[:, col] # (H,)
             loc_up = np.ceil(loc).astype(int)
             loc_down = np.floor(loc).astype(int)
             weight_up = loc_up - loc
@@ -332,8 +332,6 @@ class WarpDataset(BaseDataset):
 
         #t3 = time.time()
 
-        # 여기 0.5
-
         # convert scaleless disparity to pixel disparity
         inputs['disparity'] = \
             self.process_disparity(inputs['loaded_disparity'],
@@ -341,17 +339,15 @@ class WarpDataset(BaseDataset):
 
         #t4 = time.time()
 
-        # 여기 2.0
-
         # now generate synthetic stereo image
-        projection_disparity = inputs['disparity']
-        right_image = self.project_image(inputs['left_image'],
-                                         projection_disparity, inputs['background'])
+        #projection_disparity = inputs['disparity']
+        # right_image = self.project_image(inputs['left_image'],
+        #                                  projection_disparity, inputs['background'])
 
         #t5 = time.time()
 
-        # augmentation
-        right_image = self.augment_synthetic_image(right_image)
+        # # augmentation
+        # right_image = self.augment_synthetic_image(right_image)
 
         #t6 = time.time()
 
@@ -359,33 +355,17 @@ class WarpDataset(BaseDataset):
 
         # only keep required keys and prepare for network
         inputs = {'image': inputs['left_image'],
-                  'stereo_image': right_image,
-                  'disparity': projection_disparity.astype(float),
+                  #'stereo_image': right_image,
+                  'background': inputs['background'],
+                  'disparity': inputs['disparity'].astype(float),
                   'mono_disparity': inputs['loaded_disparity'].astype(float),
                   }
 
-        # finally crop to feed width
-        for key in ['image', 'stereo_image']:
-            inputs[key] = inputs[key].crop((0, 0, self.feed_width, self.feed_height))
-        for key in ['disparity', 'mono_disparity']:
-            inputs[key] = inputs[key][:, :self.feed_width]
+        # # finally crop to feed width
+        # for key in ['image', 'stereo_image']:
+        #     inputs[key] = inputs[key].crop((0, 0, self.feed_width, self.feed_height))
+        # for key in ['disparity', 'mono_disparity']:
+        #     inputs[key] = inputs[key][:, :self.feed_width]
 
         self.preprocess(inputs)
         return inputs
-
-'''
-0.06050 0.030253 0.10212 0.56460 1.52728 0.16492
-0.04155 0.023356 0.12951 0.54494 2.02690 0.10818
-0.09888 0.034347 0.09276 0.52555 1.51005 0.12052
-0.01583 0.022626 0.08853 0.53160 1.83835 0.11265
-0.03106 0.032529 0.09351 0.53129 1.62422 0.10183
-0.04374 0.028131 0.08039 0.50496 1.47483 0.13174
-0.02873 0.033403 0.06114 0.50407 1.59445 0.11041
-0.04126 0.022199 0.08544 0.49764 1.42482 0.13390
-0.03959 0.011637 0.05940 0.49275 2.16617 0.11927
-0.05458 0.023083 0.08699 0.51986 1.66011 0.07076
-0.01573 0.020077 0.05981 0.48742 2.07600 0.13472
-0.01405 0.022872 0.06691 0.39964 1.90838 0.13526
-0.04505 0.042088 0.08571 0.49917 1.30293 0.14665
-0.01925 0.022809 0.07860 0.50533 1.61400 0.11246
-'''

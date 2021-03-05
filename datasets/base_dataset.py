@@ -93,20 +93,28 @@ class BaseDataset:
 
     def preprocess(self, inputs):
 
-        # do color augmentation
-        if self.is_train and random.random() > 0.5:
-            color_aug = transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
-
-            for key in ['image', 'stereo_image']:
-                inputs[key] = color_aug(inputs[key])
+        # # do color augmentation
+        # if self.is_train and random.random() > 0.5:
+        #     color_aug = transforms.ColorJitter.get_params(
+        #         self.brightness, self.contrast, self.saturation, self.hue)
+        #     for key in ['image', 'stereo_image']:
+        #         inputs[key] = color_aug(inputs[key])
 
         # convert to tensors and standardise using ImageNet
-        for key in ['image', 'stereo_image']:
-            if self.disable_normalisation:
+        for key in ['image', 'stereo_image', 'background']:
+            if inputs.get(key) is None:
+                continue
+            if self.is_train or self.disable_normalisation:
+                # If training, ImageNet normalization will be done before model.forward
                 inputs[key] = self.to_tensor(inputs[key])
             else:
                 inputs[key] = (self.to_tensor(inputs[key]) - 0.45) / 0.225
+        # # convert to tensors and standardise using ImageNet
+        # for key in ['image', 'stereo_image']:
+        #     if self.disable_normalisation:
+        #         inputs[key] = self.to_tensor(inputs[key])
+        #     else:
+        #         inputs[key] = (self.to_tensor(inputs[key]) - 0.45) / 0.225
 
         if self.has_gt:
             inputs['disparity'] = torch.from_numpy(inputs['disparity']).float()

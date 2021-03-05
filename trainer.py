@@ -8,7 +8,7 @@ import os
 from collections import defaultdict
 import json
 import time
-from collections import defaultdict
+import random
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -22,12 +22,13 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, ConcatDataset
 from tensorboardX import SummaryWriter
 import torch.nn.functional as F
-
+from torchvision import transforms
 
 from datasets import SceneFlowDataset, MSCOCODataset, ADE20KDataset, \
     KITTIStereoDataset, DIWDataset, DiodeDataset, MapillaryDataset
 from model_manager import ModelManager
 from utils import readlines, normalise_image, check_chw, MyRandomSampler, load_config
+from datasets import project_image, augment_synthetic_image
 
 
 dataset_lookup = {'mscoco': MSCOCODataset,
@@ -226,6 +227,41 @@ class TrainManager:
             for key, val in inputs.items():
                 inputs[key] = val.cuda()
 
+        t0 = time.time()
+
+        # synthesize stereo_image using gpu
+        inputs['stereo_image'] = project_image(inputs['image'], inputs['disparity'], 
+                                               inputs['background'], self.opt.disable_background)
+
+        # augmentation
+        if not self.opt.disable_synthetic_augmentation:
+            inputs['stereo_image'] = augment_synthetic_image(inputs['stereo_image'])
+
+        # finally crop to feed width
+        for key in ['image', 'stereo_image']:
+            inputs[key] = inputs[key][:, :, :self.opt.height, :self.opt.width]
+        for key in ['disparity', 'mono_disparity']:
+            inputs[key] = inputs[key][:, :, :self.opt.width]
+
+        # do color augmentation (moved from warp.preprocess())
+        if random.random() > 0.5:
+            brightness = (0.8, 1.2)
+            contrast = (0.8, 1.2)
+            saturation = (0.8, 1.2)
+            hue = (-0.1, 0.1)
+            color_aug = transforms.ColorJitter.get_params(
+                brightness, contrast, saturation, hue)
+            for key in ['image', 'stereo_image']:
+                inputs[key] = color_aug(inputs[key])
+
+        # convert to tensors and standardise using ImageNet
+        if not self.opt.disable_normalisation:
+            for key in ['image', 'stereo_image']:
+                inputs[key] = (inputs[key] - 0.45) / 0.225
+
+        ###print('gpu process time=', time.time() - t0)
+
+        # forward 
         outputs = self.model(inputs['image'], inputs['stereo_image'])
 
         for scale in range(self.scales):
