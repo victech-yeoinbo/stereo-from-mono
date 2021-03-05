@@ -1,5 +1,23 @@
 # [Learning Stereo from Single Images](https://arxiv.org/abs/2008.01484)
 
+## VICTECH 작업
+
+warped_dataset 에 있던 right image synthesization 과정과 base_dataset의 preprocess 의 일부를 train.py로 옮겨왔음
+
+* 기존에는 right image가 (B, C, H, W) dim 이었는데, 이제는 (B, C, H, W + max_disparity) 의 형태로 feeding 됨
+  * 따라서, train/inference 시 동일하게 위 width scheme을 맞추도록 변경 필요
+  * 즉, 모든 dataset은 image/right_image가 (width + max_disparity) 너비를 가지도록 padding 필요
+
+=> 이건 처리
+
+* training 시에 로드된 right_image가 있으면 그걸 사용 아니면 warp해서 만들도록 해야 함
+  * warped_dataset에서 zero filled right_image를 넘겨주도록 해야 함
+
+
+---
+
+
+
 **[Jamie Watson](https://scholar.google.com/citations?view_op=list_works&hl=en&user=5pC7fw8AAAAJ), [Oisin Mac Aodha](https://homepages.inf.ed.ac.uk/omacaod/), [Daniyar Turmukhambetov](http://dantkz.github.io/about), [Gabriel J. Brostow](http://www0.cs.ucl.ac.uk/staff/g.brostow/) and [Michael Firman](http://www.michaelfirman.co.uk) – ECCV 2020 (Oral presentation)**
 
 
