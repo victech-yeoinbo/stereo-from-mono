@@ -30,11 +30,12 @@ class FlickerDataset(BaseDataset):
                  filenames,
                  height,
                  width,
+                 max_disparity,
                  is_train,
                  disable_normalisation=False,
                  **kwargs):
 
-        super(FlickerDataset, self).__init__(data_path, filenames, height, width,
+        super(FlickerDataset, self).__init__(data_path, filenames, height, width, max_disparity,
                                                  is_train=is_train, has_gt=False,
                                                  disable_normalisation=disable_normalisation)
 

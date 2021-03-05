@@ -38,13 +38,14 @@ class SceneFlowDataset(BaseDataset):
                  filenames,
                  height,
                  width,
+                 max_disparity,
                  is_train=False,
                  disable_normalisation=False,
                  disable_synthetic_augmentation=False,
                  **kwargs):
 
-        super(SceneFlowDataset, self).__init__(data_path, filenames, height, width, is_train,
-                                               has_gt=True,
+        super(SceneFlowDataset, self).__init__(data_path, filenames, height, width, max_disparity,
+                                               is_train, has_gt=True,
                                                disable_normalisation=disable_normalisation)
 
         self.webp_loader = load_webp  # can't use PIL directly for some reason

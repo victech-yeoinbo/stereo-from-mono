@@ -29,11 +29,12 @@ class MiddleburyStereoDataset(BaseDataset):
                  filenames,
                  height,
                  width,
+                 max_disparity,
                  is_train,
                  disable_normalisation=False,
                  **kwargs):
 
-        super(MiddleburyStereoDataset, self).__init__(data_path, filenames, height, width,
+        super(MiddleburyStereoDataset, self).__init__(data_path, filenames, height, width, max_disparity,
                                                       is_train=is_train, has_gt=False,
                                                       disable_normalisation=disable_normalisation)
 

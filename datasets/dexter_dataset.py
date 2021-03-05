@@ -30,11 +30,12 @@ class DexterDataset(BaseDataset):
                  filenames,
                  height,
                  width,
+                 max_disparity,
                  is_train,
                  disable_normalisation=False,
                  **kwargs):
 
-        super(DexterDataset, self).__init__(data_path, filenames, height, width,
+        super(DexterDataset, self).__init__(data_path, filenames, height, width, max_disparity,
                                             is_train=is_train, has_gt=True,
                                             disable_normalisation=disable_normalisation)
 

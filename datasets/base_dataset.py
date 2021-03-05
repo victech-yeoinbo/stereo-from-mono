@@ -46,6 +46,7 @@ class BaseDataset:
                  filenames,
                  feed_height,
                  feed_width,
+                 max_disparity,
                  is_train=False,
                  has_gt=True,
                  disable_normalisation=False,
@@ -55,6 +56,7 @@ class BaseDataset:
         self.filenames = filenames
         self.feed_height = feed_height
         self.feed_width = feed_width
+        self.max_disparity = max_disparity
         self.is_train = is_train
         self.has_gt = has_gt
         self.disable_normalisation = disable_normalisation
@@ -93,29 +95,17 @@ class BaseDataset:
 
     def preprocess(self, inputs):
 
-        # # do color augmentation
-        # if self.is_train and random.random() > 0.5:
-        #     color_aug = transforms.ColorJitter.get_params(
-        #         self.brightness, self.contrast, self.saturation, self.hue)
-        #     for key in ['image', 'stereo_image']:
-        #         inputs[key] = color_aug(inputs[key])
-
-        # convert to tensors and standardise using ImageNet
+        # Pad width to (feed_width + max_disparity)
+        # In inference, we don't need this area, 
+        # but unify dataset's input scheme regardless of train/inference
+        inputs['feed_width'] = self.feed_width
         for key in ['image', 'stereo_image', 'background']:
             if inputs.get(key) is None:
                 continue
-            if self.is_train or self.disable_normalisation:
-                # If training, ImageNet normalization will be done before model.forward
-                inputs[key] = self.to_tensor(inputs[key])
-            else:
-                inputs[key] = (self.to_tensor(inputs[key]) - 0.45) / 0.225
-        # # convert to tensors and standardise using ImageNet
-        # for key in ['image', 'stereo_image']:
-        #     if self.disable_normalisation:
-        #         inputs[key] = self.to_tensor(inputs[key])
-        #     else:
-        #         inputs[key] = (self.to_tensor(inputs[key]) - 0.45) / 0.225
-
+            pad_width = (self.feed_width + self.max_disparity - inputs.get(key).shape[-1])
+            if pad_width > 0:
+                inputs[key] = F.pad(inputs.get(key), (0, pad_width))
+        
         if self.has_gt:
             inputs['disparity'] = torch.from_numpy(inputs['disparity']).float()
 

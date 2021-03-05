@@ -29,11 +29,12 @@ class ETH3DStereoDataset(BaseDataset):
                  filenames,
                  height,
                  width,
-                 is_train,
+                 max_disparity,
+                 is_train=False,
                  disable_normalisation=False,
                  **kwargs):
 
-        super(ETH3DStereoDataset, self).__init__(data_path, filenames, height, width,
+        super(ETH3DStereoDataset, self).__init__(data_path, filenames, height, width, max_disparity,
                                                  is_train=is_train, has_gt=False,
                                                  disable_normalisation=disable_normalisation)
 

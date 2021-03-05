@@ -47,12 +47,11 @@ class WarpDataset(BaseDataset):
                  disable_background=False,
                  **kwargs):
 
-        super(WarpDataset, self).__init__(data_path, filenames, feed_height, feed_width,
+        super(WarpDataset, self).__init__(data_path, filenames, feed_height, feed_width, max_disparity
                                           is_train=is_train, has_gt=True,
                                           disable_normalisation=disable_normalisation,
                                           keep_aspect_ratio=keep_aspect_ratio)
 
-        self.max_disparity = max_disparity
         self.disable_synthetic_augmentation = disable_synthetic_augmentation
         self.disable_sharpening = disable_sharpening
         self.monodepth_model = monodepth_model
@@ -340,7 +339,7 @@ class WarpDataset(BaseDataset):
         #t4 = time.time()
 
         # now generate synthetic stereo image
-        #projection_disparity = inputs['disparity']
+        # projection_disparity = inputs['disparity']
         # right_image = self.project_image(inputs['left_image'],
         #                                  projection_disparity, inputs['background'])
 

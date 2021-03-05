@@ -33,13 +33,14 @@ class KITTIStereoDataset(BaseDataset):
                  filenames,
                  height,
                  width,
+                 max_disparity,
                  is_train,
                  kitti2012=False,
                  disable_normalisation=False,
                  load_gt=True,
                  **kwargs):
 
-        super(KITTIStereoDataset, self).__init__(data_path, filenames, height, width,
+        super(KITTIStereoDataset, self).__init__(data_path, filenames, height, width, max_disparity
                                                  is_train=is_train,
                                                  has_gt=load_gt,
                                                  disable_normalisation=disable_normalisation)

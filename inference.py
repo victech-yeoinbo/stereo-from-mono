@@ -44,9 +44,9 @@ data_type_lookup = {
     'dexter': DexterDataset,
 }
 
-
 sizes_lookup = {
-    'hourglass': {
+    'hourglass':
+    {
         'kitti2015': (1280, 384),
         'kitti2012': (1280, 384),
         'eth3d': (768, 448),
@@ -55,6 +55,17 @@ sizes_lookup = {
         'kitti2015submission': (1280, 384),
         'sceneflow': (960, 512),
         'dexter': (640, 480),
+    },
+    'pwcnet': # need multiple of 64
+    {
+        'kitti2015': (1280, 384),
+        'kitti2012': (1280, 384),
+        'eth3d': (768, 448),
+        'middlebury': (1280, 768),
+        'flicker': (704, 1088),
+        'kitti2015submission': (1280, 384),
+        'sceneflow': (960, 512),
+        'dexter': (640, 448),
     },
 }
 
@@ -84,6 +95,7 @@ class InferenceManager:
 
             data_path = path_info[test_data_type]
             width, height = sizes_lookup[self.opt.network][test_data_type]
+            max_disparity = self.opt.max_disparity
 
             # create dataloaders
             folder = 'kitti' if 'kitti' in test_data_type else test_data_type
@@ -94,7 +106,8 @@ class InferenceManager:
             dataset_class = data_type_lookup[test_data_type]
             test_dataset = dataset_class(data_path,
                                          test_filenames, height,
-                                         width, is_train=False,
+                                         width, max_disparity,
+                                         is_train=False,
                                          disable_normalisation=self.opt.disable_normalisation,
                                          kitti2012=test_data_type == 'kitti2012',
                                          load_gt=test_data_type != 'kitti2015submission')
@@ -172,6 +185,18 @@ class InferenceManager:
         if torch.cuda.is_available():
             for key, val in inputs.items():
                 inputs[key] = val.cuda()
+
+        # finally crop to feed width
+        feed_width = inputs['feed_width'][0].item() # assume batch_size=1
+        for key in ['image', 'stereo_image']:
+            inputs[key] = inputs[key][:, :, :, :feed_width]
+        for key in ['disparity', 'mono_disparity']:
+            inputs[key] = inputs[key][:, :, :feed_width]
+
+        # convert to tensors and standardise using ImageNet
+        if not self.opt.disable_normalisation:
+            for key in ['image', 'stereo_image']:
+                inputs[key] = (inputs[key] - 0.45) / 0.225
 
         outputs = self.model(inputs['image'], inputs['stereo_image'])
         preds = outputs[('raw', 0)][:, 0].cpu().numpy()
