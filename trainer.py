@@ -165,8 +165,9 @@ class TrainManager:
         if self.step < self.opt.start_step:
             print('skipping up to step {}'.format(self.opt.start_step))
 
-        for idx, inputs in enumerate(self.train_loader):
+        end_time = time.time()
 
+        for idx, inputs in enumerate(self.train_loader):
             start_time = time.time()
 
             outputs, losses = self.process_batch(inputs, compute_loss=True)
@@ -179,7 +180,13 @@ class TrainManager:
             for group in self.optimiser.param_groups:
                 self.lr = group['lr']
 
-            print('step {} - time {}'.format(self.step, round(time.time() - start_time, 3)))
+            # print time
+            now = time.time()
+            step_elap = now - end_time
+            end_time = now
+            print('step {} - total time {} / batch time {}'.format(self.step,
+                                                                   round(step_elap, 3),
+                                                                   round(end_time - start_time, 3)))
 
             # validate and log
             if self.step % self.opt.log_freq == 0:
