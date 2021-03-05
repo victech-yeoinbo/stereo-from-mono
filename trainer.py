@@ -19,7 +19,7 @@ from skimage.filters import prewitt_h
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, ConcatDataset
+from torch.utils.data import DataLoader, ConcatDataset, random_split
 from tensorboardX import SummaryWriter
 import torch.nn.functional as F
 from torchvision import transforms
@@ -116,11 +116,18 @@ class TrainManager:
         self.train_dataset = ConcatDataset(train_datasets)
         self.val_dataset = ConcatDataset(val_datasets)
 
+        # limit train_datasets to specific size
+        if self.opt.training_dataset_size < len(self.train_dataset):
+            td = self.train_dataset
+            td_size = self.opt.training_dataset_size
+            self.train_dataset = random_split(td, [td_size, len(td)-td_size])[0]
+
         # use custom sampler so we can continue from specific step
         my_sampler = MyRandomSampler(self.train_dataset, start_step=self.opt.start_step)
         self.train_loader = DataLoader(self.train_dataset, sampler=my_sampler, drop_last=True,
                                        num_workers=self.opt.num_workers,
                                        batch_size=self.opt.batch_size)
+
         self.val_loader = DataLoader(self.val_dataset, shuffle=True, drop_last=True,
                                      num_workers=1,
                                      batch_size=self.opt.batch_size)

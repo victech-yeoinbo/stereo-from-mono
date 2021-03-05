@@ -74,6 +74,11 @@ class Options:
                                           'sceneflow', 'kitti2015'],
                                  default=['ADE20K', 'diode', 'diw', 'mapillary', 'mscoco'])
 
+        self.parser.add_argument('--training_dataset_size',
+                                 help='number of data count to train for',
+                                 type=int,
+                                 default=500000)
+
         self.parser.add_argument('--training_steps',
                                  help='number of steps to train for',
                                  type=int,
