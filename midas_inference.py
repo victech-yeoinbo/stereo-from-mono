@@ -138,6 +138,14 @@ def resize_mapillary(sub, si=None, ei=None):
             image = image.resize((new_w, new_h), Image.BICUBIC)
             image.save(path)
 
+def resize_mapillary_all():
+    # for parallel executing
+    resize_mapillary('testing')
+    resize_mapillary('validation')
+    resize_mapillary('training', 0, 4500)
+    resize_mapillary('training', 4500, 9000)
+    resize_mapillary('training', 9000, 13500)
+    resize_mapillary('training', 13500, 20000)
 
 if __name__ == '__main__':
     # data_path = Path('/workspace/stereo-from-mono/workdata/diw/images')
@@ -167,13 +175,6 @@ if __name__ == '__main__':
     # data_path = Path('/workspace/stereo-from-mono/workdata/mapillary/training')
     # output_path = Path('/workspace/stereo-from-mono/workdata/mapillary/midas_depths_mapillary/training')
     # depth_predict_batch(data_path, output_path)
-
-    #resize_mapillary('testing')
-    #resize_mapillary('validation')
-    #resize_mapillary('training', 0, 4500)
-    #resize_mapillary('training', 4500, 9000)
-    #resize_mapillary('training', 9000, 13500)
-    #resize_mapillary('training', 13500, 20000)
 
 
 '''
