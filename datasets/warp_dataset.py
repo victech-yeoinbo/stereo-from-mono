@@ -47,7 +47,7 @@ class WarpDataset(BaseDataset):
                  disable_background=False,
                  **kwargs):
 
-        super(WarpDataset, self).__init__(data_path, filenames, feed_height, feed_width, max_disparity
+        super(WarpDataset, self).__init__(data_path, filenames, feed_height, feed_width, max_disparity,
                                           is_train=is_train, has_gt=True,
                                           disable_normalisation=disable_normalisation,
                                           keep_aspect_ratio=keep_aspect_ratio)
@@ -308,8 +308,6 @@ class WarpDataset(BaseDataset):
         if self.is_train and random.random() > 0.5:
             do_flip = True
 
-        #t0 = time.time()
-
         # load from disk
         left_image, background_image = self.load_images(idx, do_flip=do_flip)
         loaded_disparity = self.load_disparity(idx, do_flip=do_flip)
@@ -318,53 +316,28 @@ class WarpDataset(BaseDataset):
         inputs['background'] = background_image
         inputs['loaded_disparity'] = loaded_disparity
 
-        #t1 = time.time()
-
         # resize and/or crop
         inputs = self.prepare_sizes(inputs)
-
-        #t2 = time.time()
 
         # match color in background image
         inputs['background'] = transfer_color(np.array(inputs['background']),
                                               np.array(inputs['left_image']))
-
-        #t3 = time.time()
 
         # convert scaleless disparity to pixel disparity
         inputs['disparity'] = \
             self.process_disparity(inputs['loaded_disparity'],
                                    max_disparity_range=(50, self.max_disparity))
 
-        #t4 = time.time()
-
-        # now generate synthetic stereo image
-        # projection_disparity = inputs['disparity']
-        # right_image = self.project_image(inputs['left_image'],
-        #                                  projection_disparity, inputs['background'])
-
-        #t5 = time.time()
-
-        # # augmentation
-        # right_image = self.augment_synthetic_image(right_image)
-
-        #t6 = time.time()
-
-        #print(t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+        # create dummy right_image
+        right_image = np.zeros_like(inputs['left_image'])
 
         # only keep required keys and prepare for network
-        inputs = {'image': inputs['left_image'],
-                  #'stereo_image': right_image,
+        inputs = {'image': np.array(inputs['left_image']),
+                  'stereo_image': right_image,
                   'background': inputs['background'],
                   'disparity': inputs['disparity'].astype(float),
                   'mono_disparity': inputs['loaded_disparity'].astype(float),
                   }
-
-        # # finally crop to feed width
-        # for key in ['image', 'stereo_image']:
-        #     inputs[key] = inputs[key].crop((0, 0, self.feed_width, self.feed_height))
-        # for key in ['disparity', 'mono_disparity']:
-        #     inputs[key] = inputs[key][:, :self.feed_width]
 
         self.preprocess(inputs)
         return inputs

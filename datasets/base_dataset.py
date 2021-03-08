@@ -17,6 +17,7 @@ from PIL import Image  # using pillow-simd for increased speed
 import torch
 import torch.utils.data as data
 from torchvision import transforms
+import torch.nn.functional as F
 
 import cv2
 cv2.setNumThreads(0)
@@ -95,17 +96,21 @@ class BaseDataset:
 
     def preprocess(self, inputs):
 
-        # Pad width to (feed_width + max_disparity)
-        # In inference, we don't need this area, 
-        # but unify dataset's input scheme regardless of train/inference
         inputs['feed_width'] = self.feed_width
         for key in ['image', 'stereo_image', 'background']:
             if inputs.get(key) is None:
                 continue
+
+            # convert to tensor
+            inputs[key] = self.to_tensor(inputs[key])
+
+            # Pad width to (feed_width + max_disparity)
+            # In inference, we don't need this area, 
+            # but unify dataset's input scheme regardless of train/inference
             pad_width = (self.feed_width + self.max_disparity - inputs.get(key).shape[-1])
             if pad_width > 0:
                 inputs[key] = F.pad(inputs.get(key), (0, pad_width))
-        
+
         if self.has_gt:
             inputs['disparity'] = torch.from_numpy(inputs['disparity']).float()
 

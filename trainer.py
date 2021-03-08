@@ -244,8 +244,12 @@ class TrainManager:
         t0 = time.time()
 
         # synthesize stereo_image using gpu
-        inputs['stereo_image'] = project_image(inputs['image'], inputs['disparity'], 
-                                               inputs['background'], self.opt.disable_background)
+        synthesized_stereo_image = project_image(inputs['image'], inputs['disparity'], 
+                                                inputs['background'], self.opt.disable_background)
+
+        # use synthesized right image if original one is empty (=zero-filled)
+        empty_stereo_image_mask = torch.count_nonzero(inputs['stereo_image'], dim=(1,2,3)) == 0
+        inputs['stereo_image'][empty_stereo_image_mask] = synthesized_stereo_image[empty_stereo_image_mask]
 
         # augmentation
         if not self.opt.disable_synthetic_augmentation:

@@ -1,4 +1,5 @@
 workdata
 *.pyc
 log/
+log_done/
 hourglass_midas_release/
